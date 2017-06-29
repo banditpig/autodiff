@@ -48,7 +48,7 @@ derivDual (Dual x x') = (x, x')
 --derivfx :: Num a => (Dual a -> Dual a) -> a -> (a, a)
 derivfx f x = derivDual . f $ Dual x 1
 
-pDx :: (Num a, Num a, Num a) => (Dual a -> Dual a -> Dual a -> t) -> a -> a -> a -> t
+pDx, pDy, pDz :: (Num a) => (Dual a -> Dual a -> Dual a -> t) -> a -> a -> a -> t
 pDx f x y z = f (Dual x 1) (Dual y 0) (Dual z 0) 
 pDy f x y z = f (Dual x 0) (Dual y 1) (Dual z 0) 
 pDz f x y z = f (Dual x 0) (Dual y 0) (Dual z 1) 
@@ -62,7 +62,5 @@ grad f x y z =   (x', y', z' ) where Dual _ x' = pDx f x y z
 gradV :: (Dual Scalar -> Dual Scalar -> Dual Scalar -> Dual Scalar)  -> Scalar -> Scalar -> Scalar -> Vector
 gradV f x y z = V  (grad f x y z)
 
-g x y z = (exp 1)**(2*x -z) + ((x*y*z)/sqrt(x + y))
-g' x = (exp 1)**(2*x) + x * sin(x / (x +1))
-h x = foldr (\_ z -> sin ( g' x  + g' z)) x [1..100]
-
+g x y z = (exp 1)**(x + y + z) + ((x*y*z)/sqrt(x + y + z))
+h x y z = foldr (\_ a -> (x + y + z)  + atan(a + ( g (x+a) (y+a) (z+a)))) (x + y + z) [1..1000]
