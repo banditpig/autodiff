@@ -1,6 +1,5 @@
 
-
-
+import Vectors
 data Dual a = Dual a a deriving (Show)
 
 instance Functor (Dual) where 
@@ -31,22 +30,39 @@ instance Fractional a => Fractional (Dual a) where
 
 instance (Fractional a, Floating a) => Floating (Dual a) where
   pi                = Dual pi 0
-  exp   (Dual x dx) = Dual (exp x) (dx * exp x)
-  log   (Dual x dx) = Dual (log x) (dx / x)
-  sin   (Dual x dx) = Dual (sin x) (dx * cos x)
-  cos   (Dual x dx) = Dual (cos x) (- dx * sin x)
-  asin  (Dual x dx) = Dual (asin x) (dx / (sqrt(1 - x ** 2)))
-  acos  (Dual x dx) = Dual (acos x) (- dx / (sqrt(1 - x ** 2)))
-  atan  (Dual x dx) = Dual (atan x) (dx / (1 + x ** 2))
-  sinh  (Dual x dx) = Dual (sinh x) (dx * cosh x)
-  cosh  (Dual x dx) = Dual (cosh x) (dx * sinh x)
+  exp   (Dual x dx) = Dual (exp x)   (dx * exp x)
+  log   (Dual x dx) = Dual (log x)   (dx / x)
+  sin   (Dual x dx) = Dual (sin x)   (dx * cos x)
+  cos   (Dual x dx) = Dual (cos x)   (- dx * sin x)
+  asin  (Dual x dx) = Dual (asin x)  (dx / (sqrt(1 - x ** 2)))
+  acos  (Dual x dx) = Dual (acos x)  (- dx / (sqrt(1 - x ** 2)))
+  atan  (Dual x dx) = Dual (atan x)  (dx / (1 + x ** 2))
+  sinh  (Dual x dx) = Dual (sinh x)  (dx * cosh x)
+  cosh  (Dual x dx) = Dual (cosh x)  (dx * sinh x)
   asinh (Dual x dx) = Dual (asinh x) (dx / (sqrt(1 + x ** 2)))
   acosh (Dual x dx) = Dual (acosh x) (dx / (sqrt(x ** 2 - 1)))
   atanh (Dual x dx) = Dual (atanh x) (dx / (1 - x ** 2))
-
 derivDual :: Dual a -> (a, a)
 derivDual (Dual x x') = (x, x')
 
-derivfx :: Num a => (Dual a -> Dual a) -> a -> (a, a)
+--derivfx :: Num a => (Dual a -> Dual a) -> a -> (a, a)
 derivfx f x = derivDual . f $ Dual x 1
+
+pDx :: (Num a, Num a, Num a) => (Dual a -> Dual a -> Dual a -> t) -> a -> a -> a -> t
+pDx f x y z = f (Dual x 1) (Dual y 0) (Dual z 0) 
+pDy f x y z = f (Dual x 0) (Dual y 1) (Dual z 0) 
+pDz f x y z = f (Dual x 0) (Dual y 0) (Dual z 1) 
+
+
+grad :: (Num a, Num a, Num a) => (Dual a -> Dual a-> Dual a -> Dual a) -> a -> a -> a -> (a, a, a)
+grad f x y z =   (x', y', z' ) where Dual _ x' = pDx f x y z
+                                     Dual _ y' = pDy f x y z
+                                     Dual _ z' = pDz f x y z
+
+gradV :: (Dual Scalar -> Dual Scalar -> Dual Scalar -> Dual Scalar)  -> Scalar -> Scalar -> Scalar -> Vector
+gradV f x y z = V  (grad f x y z)
+
+g x y z = (exp 1)**(2*x -z) + ((x*y*z)/sqrt(x + y))
+g' x = (exp 1)**(2*x) + x * sin(x / (x +1))
+h x = foldr (\_ z -> sin ( g' x  + g' z)) x [1..100]
 
