@@ -1,4 +1,7 @@
 
+
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wall #-}
 import Vectors
 data Dual a = Dual a a deriving (Show)
 
@@ -42,11 +45,14 @@ instance (Fractional a, Floating a) => Floating (Dual a) where
   asinh (Dual x dx) = Dual (asinh x) (dx / (sqrt(1 + x ** 2)))
   acosh (Dual x dx) = Dual (acosh x) (dx / (sqrt(x ** 2 - 1)))
   atanh (Dual x dx) = Dual (atanh x) (dx / (1 - x ** 2))
+
 derivDual :: Dual a -> (a, a)
 derivDual (Dual x x') = (x, x')
 
 --derivfx :: Num a => (Dual a -> Dual a) -> a -> (a, a)
-derivfx f x = derivDual . f $ Dual x 1
+
+xx :: (Num a ) => [a] -> [Dual a]
+xx  = foldr (\x ac  -> (Dual x 1) : ac ) [] 
 
 pDx, pDy, pDz :: (Num a) => (Dual a -> Dual a -> Dual a -> t) -> a -> a -> a -> t
 pDx f x y z = f (Dual x 1) (Dual y 0) (Dual z 0) 
